@@ -1,20 +1,28 @@
+import os
 import pandas as pd
 import numpy as np
 import tensorflow as tf
 import argparse
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 #load model
 def model_load():
-    BA_model = tf.keras.models.load_model("./Python/model/BAmodel")
+    BA_model_path = os.path.join(script_dir, "model", "BAmodel") 
+    BA_model = tf.keras.models.load_model(BA_model_path)
     BAmodel = tf.keras.models.Model(inputs = BA_model.input,outputs = BA_model.layers[-2].output)
-    TLimmuno2 = tf.keras.models.load_model("./Python/model/TLimmuno2")
+    TLimmuno2_model_path = os.path.join(script_dir, "model", "TLimmuno2") 
+    TLimmuno2 = tf.keras.models.load_model(TLimmuno2_model_path)
     return BAmodel,TLimmuno2
 
-pseudo_seq = pd.read_feather("./Python/data/pseudo_blosum62.feather")
-pseudo_seq_file = pd.read_table("./Python/data/pseudosequence.2016.all.X.dat",header=None,names=("HLA","sequence"))
+pseudo_seq_path = os.path.join(script_dir, "data", "pseudo_blosum62.feather")
+pseudo_seq = pd.read_feather(pseudo_seq_path)
+pseudo_seq_file_path = os.path.join(script_dir, "data", "pseudosequence.2016.all.X.dat")
+pseudo_seq_file = pd.read_table(pseudo_seq_file_path, header=None,names=("HLA","sequence"))
 
 def blosum62(peptide,maxlen):
-    Blosum62_matrix = pd.read_csv("./Python/data/BLOSUM62.csv",comment="#")
+    Blosum62_matrix_path = os.path.join(script_dir, "data", "BLOSUM62.csv")
+    Blosum62_matrix = pd.read_csv(Blosum62_matrix_path, comment="#")
     Protein_alphabet = list("ARNDCQEGHILKMFPSTWYVX")
     Blosum62_matrix = Blosum62_matrix[Protein_alphabet]
     Blosum62_matrix = Blosum62_matrix.loc[Protein_alphabet]
@@ -58,7 +66,8 @@ def model_predict(peptide,MHC,BAmodel,TLimmuno2):
 
 
 def rank(Data,BAmodel,TLimmuno2):
-    IMM_bg_pep = pd.read_csv("./Python/data/IMM_bg_pep.csv")
+    IMM_bg_pep_path = os.path.join(script_dir, "data", "IMM_bg_pep.csv")
+    IMM_bg_pep = pd.read_csv(IMM_bg_pep_path)
     IMM_bg_pep["pep_blosum"] = IMM_bg_pep["pep"].apply(blosum62,args=(21,))
     DF = pd.DataFrame()
     for i in Data.loc[:,"HLA"].unique():
